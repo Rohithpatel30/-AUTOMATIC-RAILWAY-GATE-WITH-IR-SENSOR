@@ -1,0 +1,77 @@
+#include <Servo.h>
+#include <LiquidCrystal.h>
+#define IR_ENTRY 2        // IR Sensor before the gate (Train Arrival)
+#define IR_EXIT 3         // IR Sensor after the gate (Train Departure)
+#define SERVO_PIN 9       // Servo Motor Pin
+
+/* LCD Pins (RS, EN, D4, D5, D6, D7) */
+LiquidCrystal lcd(12, 11, 6, 5, 4, 7);
+Servo gateServo;
+
+#define GATE_OPEN  90     // Gate Open Angle
+#define GATE_CLOSE 0      // Gate Close Angle
+
+bool trainDetected = false;
+
+void setup() {
+  pinMode(IR_ENTRY, INPUT);
+  pinMode(IR_EXIT, INPUT);
+
+  gateServo.attach(SERVO_PIN);
+  gateServo.write(GATE_OPEN);
+
+  lcd.begin(16, 2);
+  lcd.print("Railway Gate");
+  lcd.setCursor(0, 1);
+  lcd.print("System Ready");
+
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+
+  if (digitalRead(IR_ENTRY) == LOW && trainDetected == false) {
+    trainDetected = true;
+
+    lcd.clear();
+    lcd.print("Train Arrived");
+    lcd.setCursor(0, 1);
+    lcd.print("Gate Closing");
+
+    closeGate();
+  }
+
+  if (digitalRead(IR_EXIT) == LOW && trainDetected == true) {
+    trainDetected = false;
+
+    lcd.clear();
+    lcd.print("Train Passed");
+    lcd.setCursor(0, 1);
+    lcd.print("Gate Opening");
+
+    openGate();
+  }
+}
+
+void closeGate() {
+  for (int pos = GATE_OPEN; pos >= GATE_CLOSE; pos--) {
+    gateServo.write(pos);
+    delay(20);
+  }
+  delay(500);
+
+  lcd.clear();
+  lcd.print("Gate Closed");
+}
+
+void openGate() {
+  for (int pos = GATE_CLOSE; pos <= GATE_OPEN; pos++) {
+    gateServo.write(pos);
+    delay(20);
+  }
+  delay(500);
+
+  lcd.clear();
+  lcd.print("Gate Open");
+}
